@@ -1,229 +1,253 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useCartStore } from "@/lib/store/useCartStore"
-import Image from "next/image"
-import { TransitionLink } from "@/components/transition-link"
-import { useTranslationStore } from "@/lib/i18n/useTranslationStore"
+import { useEffect, useState } from "react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { useCartStore } from "@/lib/store/useCartStore";
+import Link from "next/link";
 
-export default function CheckoutPage() {
-  const { dict } = useTranslationStore()
-  const cartItems = useCartStore((state) => state.items)
-  const cartTotal = useCartStore((state) => state.getCartTotal())
-  
-  const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [isSuccess, setIsSuccess] = useState(false)
+// Initialisation de Stripe
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+);
 
-  const handleNext = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (step < 3) {
-      setStep((s) => (s + 1) as 1 | 2 | 3)
+function CheckoutForm({ amount }: { amount: number }) {
+  const stripe = useStripe();
+  const elements = useElements();
+
+  const [message, setMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!stripe || !elements) return;
+
+    setIsLoading(true);
+
+    const { error } = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout/success`,
+      },
+    });
+
+    if (error.type === "card_error" || error.type === "validation_error") {
+      setMessage(error.message || "Une erreur est survenue avec votre carte");
     } else {
-      setIsSuccess(true)
-      useCartStore.getState().clearCart?.() // Assume clearCart exists or fails silently
+      setMessage("Une erreur inattendue est survenue.");
     }
-  }
 
-  if (isSuccess) {
-    return (
-      <main className="min-h-screen bg-[#f9f8f6] flex flex-col items-center justify-center p-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center max-w-lg"
-        >
-          <div className="w-16 h-16 rounded-full border border-black/10 flex items-center justify-center mx-auto mb-8">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-          </div>
-          <h1 className="font-serif text-3xl md:text-4xl text-black mb-4 uppercase tracking-[0.15em]">
-            Commande Confirmée
-          </h1>
-          <p className="font-sans text-sm text-black/60 leading-relaxed mb-12">
-            Nous avons bien reçu votre commande. Un e-mail de confirmation contenant les détails de votre achat vous a été envoyé. Le privilège de l'équitation sans compromis commence bientôt.
-          </p>
-          <TransitionLink
-            href="/"
-            className="inline-block border border-black px-10 py-4 font-sans text-xs font-medium uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
-          >
-            Retour à l'accueil
-          </TransitionLink>
-        </motion.div>
-      </main>
-    )
-  }
+    setIsLoading(false);
+  };
 
   return (
-    <main className="min-h-screen bg-[#f9f8f6] flex flex-col md:flex-row">
-      {/* Left Column: Form */}
-      <div className="flex-1 px-6 py-12 md:px-16 md:py-24 overflow-y-auto">
-        <div className="max-w-xl mx-auto">
-          <TransitionLink href="/" className="inline-block mb-16 opacity-40 hover:opacity-100 transition-opacity">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
+    <form id="payment-form" onSubmit={handleSubmit} className="space-y-8 mt-8">
+      <div>
+        <PaymentElement id="payment-element" options={{ layout: "accordion" }} />
+      </div>
+      
+      {message && (
+        <div className="text-center text-xs tracking-wide uppercase text-red-500 bg-red-500/10 p-4 border border-red-500/20">
+          {message}
+        </div>
+      )}
+
+      <button
+        disabled={isLoading || !stripe || !elements}
+        id="submit"
+        className={`w-full flex justify-center py-5 px-4 border border-transparent text-sm font-semibold tracking-widest uppercase transition-all duration-300 ${
+          isLoading || !stripe || !elements
+            ? "bg-zinc-800 text-zinc-500 cursor-not-allowed"
+            : "bg-white text-black hover:bg-zinc-200 focus:outline-none focus:ring-1 focus:ring-white focus:ring-offset-1 focus:ring-offset-black"
+        }`}
+      >
+        {isLoading ? (
+          <span className="flex items-center gap-3">
+            <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-          </TransitionLink>
+            TRAITEMENT EN COURS
+          </span>
+        ) : (
+          `PAYER ${amount.toFixed(2)} €`
+        )}
+      </button>
+    </form>
+  );
+}
 
-          <div className="flex gap-4 border-b border-black/10 pb-4 mb-12 font-sans text-xs uppercase tracking-widest font-semibold">
-            <button onClick={() => setStep(1)} className={`transition-colors ${step >= 1 ? "text-black" : "text-black/30"}`}>1. Informations</button>
-            <span className="text-black/20">/</span>
-            <button onClick={() => setStep(2)} disabled={step < 2} className={`transition-colors ${step >= 2 ? "text-black" : "text-black/30"}`}>2. Livraison</button>
-            <span className="text-black/20">/</span>
-            <button onClick={() => setStep(3)} disabled={step < 3} className={`transition-colors ${step === 3 ? "text-black" : "text-black/30"}`}>3. Paiement</button>
-          </div>
+export default function CheckoutPage() {
+  const { items, getCartTotal } = useCartStore();
+  const [clientSecret, setClientSecret] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-          <form onSubmit={handleNext} className="space-y-12">
-            <AnimatePresence mode="wait">
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-6"
-                >
-                  <h2 className="font-serif text-2xl text-black">Vos Coordonnées</h2>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Prénom</label>
-                      <input required type="text" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Nom</label>
-                      <input required type="text" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Email</label>
-                    <input required type="email" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Téléphone</label>
-                    <input required type="tel" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                  </div>
-                </motion.div>
-              )}
+  const totalAmount = getCartTotal();
 
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-6"
-                >
-                  <h2 className="font-serif text-2xl text-black">Livraison</h2>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Adresse</label>
-                    <input required type="text" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Appartement, suite, etc. (optionnel)</label>
-                    <input type="text" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Code Postal</label>
-                      <input required type="text" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Ville</label>
-                      <input required type="text" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+  useEffect(() => {
+    if (totalAmount <= 0) return;
 
-              {step === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="space-y-6"
-                >
-                  <h2 className="font-serif text-2xl text-black">Paiement Sécurisé</h2>
-                  <div className="border border-black/10 bg-white p-6 relative">
-                    <div className="absolute top-4 right-4 flex gap-2 opacity-30">
-                      <svg width="32" height="20" viewBox="0 0 32 20" fill="none"><rect width="32" height="20" rx="3" fill="#222"/><circle cx="11.5" cy="10" r="6.5" fill="#EB001B"/><circle cx="20.5" cy="10" r="6.5" fill="#F79E1B" fillOpacity="0.8"/></svg>
-                      <svg width="32" height="20" viewBox="0 0 32 20" fill="none"><rect width="32" height="20" rx="3" fill="#1A1F71"/><path d="M12.5 14L10 6h2l1.5 6L16 6h2l-2.5 8h-3z" fill="#fff"/></svg>
-                    </div>
-                    <div className="flex flex-col gap-2 mt-6">
-                      <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Numéro de carte</label>
-                      <input required type="text" placeholder="0000 0000 0000 0000" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors tracking-widest" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-6 mt-6">
-                      <div className="flex flex-col gap-2">
-                        <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">Date d'expiration</label>
-                        <input required type="text" placeholder="MM/AA" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="font-sans text-[0.65rem] font-semibold uppercase tracking-widest text-black/50">CVC</label>
-                        <input required type="text" placeholder="123" className="w-full border-b border-black/20 bg-transparent py-3 font-sans text-sm outline-none focus:border-black transition-colors" />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+    fetch("/api/create-payment-intent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: Math.round(totalAmount * 100) }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Erreur de communication avec le serveur");
+        return res.json();
+      })
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setClientSecret(data.clientSecret);
+      })
+      .catch((err) => {
+        setError(err.message);
+      });
+  }, [totalAmount]);
 
-            <button 
-              type="submit" 
-              className="w-full bg-black text-white font-sans text-[0.7rem] font-semibold uppercase tracking-[0.2em] py-5 transition-colors hover:bg-black/80"
-            >
-              {step === 3 ? `Payer ${cartTotal}€` : "Continuer"}
-            </button>
-          </form>
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black py-12 px-4">
+        <div className="text-center max-w-md w-full border border-zinc-800 p-12 bg-zinc-950">
+          <h2 className="text-lg font-medium text-white mb-8 tracking-wide uppercase">VOTRE PANIER EST VIDE</h2>
+          <Link href="/" className="inline-block px-8 py-4 bg-white text-black text-xs font-semibold tracking-widest uppercase hover:bg-zinc-200 transition-colors">
+            RETOURNER À LA BOUTIQUE
+          </Link>
         </div>
       </div>
+    );
+  }
 
-      {/* Right Column: Order Summary */}
-      <div className="w-full md:w-[450px] bg-[#f5f3ef] border-l border-black/5 px-6 py-12 md:px-12 md:py-24 flex flex-col">
-        <h3 className="font-serif text-2xl text-black mb-8">Récapitulatif</h3>
-        
-        <div className="flex-1 overflow-y-auto mb-8">
-          {cartItems.length === 0 ? (
-            <p className="font-sans text-sm text-black/50">Votre panier est vide.</p>
-          ) : (
-            <div className="space-y-6">
-              {cartItems.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="relative w-16 h-20 bg-white">
-                    <Image src={item.image} alt={item.name} fill className="object-cover" />
-                  </div>
-                  <div className="flex flex-col flex-1">
-                    <span className="font-sans text-sm font-medium">{item.name}</span>
-                    <span className="font-sans text-xs text-black/50 mt-1">Qté: {item.quantity}</span>
-                    <span className="font-sans text-sm mt-auto">{item.price}€</span>
-                  </div>
-                </div>
-              ))}
+  // Configuration de Stripe Ultra Minimaliste (sharp edges)
+  const appearance = {
+    theme: 'night' as const,
+    variables: {
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      colorPrimary: '#ffffff',
+      colorBackground: '#000000',
+      colorText: '#ffffff',
+      colorDanger: '#ef4444',
+      spacingUnit: '4px',
+      borderRadius: '0px', // Pas d'arrondis
+      colorTextSecondary: '#a1a1aa',
+    },
+    rules: {
+      '.Input': {
+        border: '1px solid #27272a',
+        backgroundColor: '#000000',
+        boxShadow: 'none',
+        padding: '12px',
+        borderRadius: '0px', // Bords stricts
+      },
+      '.Input:focus': {
+        border: '1px solid #ffffff',
+        boxShadow: 'none',
+      },
+      '.Label': {
+        color: '#e4e4e7',
+        fontWeight: '500',
+        textTransform: 'uppercase',
+        fontSize: '12px',
+        letterSpacing: '1px',
+        marginBottom: '8px',
+      },
+      '.Tab': {
+        borderRadius: '0px',
+        border: '1px solid #27272a',
+      },
+    },
+  };
+
+  return (
+    <div className="min-h-screen bg-black pt-28 pb-12 px-4 sm:px-6 lg:px-8 font-sans text-white selection:bg-white selection:text-black">
+      <div className="max-w-6xl mx-auto border-t border-zinc-800 pt-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+          
+          {/* Colonne de Gauche : Paiement */}
+          <div>
+            <div className="mb-12 border-b border-zinc-800 pb-6">
+              <h1 className="text-2xl font-light text-white tracking-widest uppercase">
+                Paiement
+              </h1>
             </div>
-          )}
-        </div>
 
-        <div className="border-t border-black/10 pt-6 space-y-4 font-sans text-sm text-black/60">
-          <div className="flex justify-between">
-            <span>Sous-total</span>
-            <span>{cartTotal}€</span>
+            {error ? (
+              <div className="text-center text-xs tracking-wide uppercase text-red-500 bg-red-500/10 p-4 border border-red-500/20">
+                {error}
+              </div>
+            ) : clientSecret ? (
+              <Elements options={{ clientSecret, appearance }} stripe={stripePromise}>
+                <CheckoutForm amount={totalAmount} />
+              </Elements>
+            ) : (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin h-6 w-6 border-b-2 border-white rounded-full"></div>
+              </div>
+            )}
           </div>
-          <div className="flex justify-between">
-            <span>Livraison (Express)</span>
-            <span>Offerte</span>
+
+          {/* Colonne de Droite : Résumé */}
+          <div>
+            <div className="mb-12 border-b border-zinc-800 pb-6">
+              <h2 className="text-lg font-light text-white tracking-widest uppercase">
+                Résumé
+              </h2>
+            </div>
+            
+            <div className="bg-transparent">
+              <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-zinc-800">
+                {items.map((item) => (
+                  <div key={item.id} className="flex gap-6 pb-6 border-b border-zinc-900 last:border-0 last:pb-0">
+                    <div className="relative w-24 h-24 bg-zinc-900 flex-shrink-0">
+                      <img 
+                        src={item.image || "/placeholder.jpg"} 
+                        alt={item.name} 
+                        className="w-full h-full object-cover grayscale opacity-90"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-between py-1">
+                      <div>
+                        <h3 className="text-sm font-medium text-white tracking-wide uppercase">{item.name}</h3>
+                        <p className="text-xs text-zinc-500 mt-2 uppercase tracking-widest">QTE {item.quantity}</p>
+                      </div>
+                      <p className="text-sm font-medium text-white">{(item.price * item.quantity).toFixed(2)} €</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 pt-8 border-t border-zinc-800 space-y-6">
+                <div className="flex items-center justify-between text-sm tracking-wide">
+                  <span className="text-zinc-400 uppercase">Sous-total</span>
+                  <span className="text-white font-medium">{totalAmount.toFixed(2)} €</span>
+                </div>
+                <div className="flex items-center justify-between text-sm tracking-wide">
+                  <span className="text-zinc-400 uppercase">Livraison</span>
+                  <span className="text-white font-medium">OFFERTE</span>
+                </div>
+                <div className="flex items-center justify-between pt-6 border-t border-zinc-800">
+                  <span className="text-lg font-medium text-white tracking-widest uppercase">Total</span>
+                  <span className="text-xl font-medium text-white tracking-wider">{totalAmount.toFixed(2)} €</span>
+                </div>
+              </div>
+              
+              <div className="mt-12 flex items-center justify-center gap-3 text-zinc-600 border border-zinc-800 py-4">
+                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                 </svg>
+                 <span className="text-[10px] tracking-widest uppercase">Paiement Sécurisé via Stripe</span>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between border-t border-black/10 pt-4 mt-4 font-semibold text-black text-lg">
-            <span>Total</span>
-            <span>{cartTotal}€</span>
-          </div>
+
         </div>
       </div>
-    </main>
-  )
+    </div>
+  );
 }

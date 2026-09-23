@@ -41,7 +41,7 @@ export function FounderWordSection() {
           {/* Image style magazine, adaptée pour mobile (portrait 4:5) et desktop (portrait 3:4) */}
           <div className="relative w-full aspect-[4/5] md:aspect-[3/4] overflow-hidden mt-6 md:mt-0">
             <img 
-              src="/hott-hero.png" 
+              src="/fondateur.jpeg" 
               alt="HOTT Vision"
               className="absolute inset-0 w-full h-full object-cover filter grayscale contrast-125 opacity-70"
             />

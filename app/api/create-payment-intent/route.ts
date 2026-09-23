@@ -7,12 +7,21 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 
 export async function POST(req: Request) {
   try {
-    const { amount } = await req.json();
+    const { amount, items, userEmail } = await req.json();
 
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount || 1000, // Montant par défaut 10.00 € (en centimes)
       currency: 'eur',
       payment_method_types: ['card'],
+      metadata: {
+        cart_items: items ? JSON.stringify(items.map((i: any) => ({
+          id: i.id,
+          q: i.quantity,
+          p: i.price,
+          n: i.name.substring(0, 30) // limit name length to save space
+        }))) : '[]',
+        userEmail: userEmail || 'guest',
+      }
     });
 
     return NextResponse.json({

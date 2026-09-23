@@ -202,15 +202,95 @@ function DashboardTab({ userName }: { userName: string }) {
 }
 
 function CommandesTab() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/orders")
+      .then(res => {
+        if (!res.ok) throw new Error("Impossible de charger les commandes");
+        return res.json();
+      })
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setOrders(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
+
   return (
     <div>
       <h2 className="font-sans text-xl font-bold tracking-tight text-black">
         Toutes vos commandes
       </h2>
       <div className="mt-8 rounded-none bg-white p-10 md:p-14">
-        <p className="font-sans text-sm leading-relaxed text-black/50">
-          Vous n'avez réalisé aucune commande. Vous trouverez ici les informations concernant vos futures commandes.
-        </p>
+        {loading ? (
+          <div className="flex items-center gap-3 text-black/50 font-sans text-sm">
+            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            Chargement de vos commandes...
+          </div>
+        ) : error ? (
+          <p className="font-sans text-sm leading-relaxed text-red-500">
+            Une erreur est survenue lors du chargement de vos commandes.
+          </p>
+        ) : orders.length === 0 ? (
+          <p className="font-sans text-sm leading-relaxed text-black/50">
+            Vous n'avez réalisé aucune commande. Vous trouverez ici les informations concernant vos futures commandes.
+          </p>
+        ) : (
+          <div className="space-y-8">
+            {orders.map((order) => (
+              <div key={order.id} className="border border-black/10 p-6">
+                <div className="flex flex-wrap gap-6 justify-between items-start mb-6 pb-6 border-b border-black/10">
+                  <div>
+                    <p className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50 mb-1">Commande n°</p>
+                    <p className="font-sans text-sm font-medium text-black">{order.id.slice(-8).toUpperCase()}</p>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <p className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50 mb-1">Date</p>
+                    <p className="font-sans text-sm font-medium text-black">
+                      {new Date(order.createdAt).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <p className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50 mb-1">Statut</p>
+                    <p className="font-sans text-sm font-medium text-black">{order.status === "PAID" ? "Payée" : order.status}</p>
+                  </div>
+                  <div className="text-left md:text-right">
+                    <p className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50 mb-1">Total</p>
+                    <p className="font-sans text-sm font-medium text-black">{order.amount.toFixed(2)} €</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  {order.items.map((item: any) => (
+                    <div key={item.id} className="flex justify-between items-center text-sm font-sans">
+                      <div className="flex gap-4">
+                        <span className="text-black/50">{item.quantity}x</span>
+                        <span className="text-black">{item.name}</span>
+                      </div>
+                      <span className="text-black">{(item.price * item.quantity).toFixed(2)} €</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-black/10">
+                  <p className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50 mb-2">Livraison</p>
+                  <p className="font-sans text-sm text-black">
+                    {order.shippingName}<br/>
+                    {order.addressLine1} {order.addressLine2 ? <br/> : ""}{order.addressLine2}
+                    {order.postalCode} {order.city}, {order.country}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -232,19 +312,185 @@ function ProduitsTab() {
 }
 
 function AdressesTab() {
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const fetchAddresses = () => {
+    setLoading(true);
+    fetch("/api/addresses")
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setAddresses(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setError(err.message);
+        setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
+
+  const handleDelete = (id: string) => {
+    if (!confirm("Voulez-vous vraiment supprimer cette adresse ?")) return;
+    
+    fetch(`/api/addresses/${id}`, { method: "DELETE" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setAddresses(addresses.filter(a => a.id !== id));
+      })
+      .catch(err => alert(err.message));
+  };
+
+  const handleAddAddress = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFormLoading(true);
+    setFormError(null);
+
+    const formData = new FormData(e.currentTarget);
+    const newAddress = {
+      firstName: formData.get("firstName"),
+      lastName: formData.get("lastName"),
+      addressLine1: formData.get("addressLine1"),
+      addressLine2: formData.get("addressLine2"),
+      city: formData.get("city"),
+      postalCode: formData.get("postalCode"),
+      country: formData.get("country"),
+    };
+
+    fetch("/api/addresses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newAddress),
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setAddresses([data, ...addresses]);
+        setIsAdding(false);
+        setFormLoading(false);
+      })
+      .catch(err => {
+        setFormError(err.message);
+        setFormLoading(false);
+      });
+  };
+
   return (
     <div>
       <h2 className="font-sans text-xl font-bold tracking-tight text-black">
         Carnet d'adresses
       </h2>
-      <div className="mt-8 rounded-none bg-white p-10 md:p-14">
-        <p className="font-sans text-sm leading-relaxed text-black/50">
-          Aucune adresse enregistrée.
-        </p>
-        <button className="mt-8 border border-black px-8 py-3 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-black hover:bg-black hover:text-white transition-colors">
-          Ajouter une adresse
-        </button>
-      </div>
+      
+      {isAdding ? (
+        <div className="mt-8 rounded-none bg-white p-10 md:p-14">
+          <div className="mb-8 flex justify-between items-center">
+            <h3 className="font-sans text-sm font-semibold tracking-widest uppercase text-black">Nouvelle adresse</h3>
+            <button onClick={() => setIsAdding(false)} className="text-black/50 hover:text-black font-sans text-xs uppercase tracking-widest transition-colors">
+              Annuler
+            </button>
+          </div>
+          
+          <form onSubmit={handleAddAddress} className="space-y-6">
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Prénom</label>
+                <input required name="firstName" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Nom</label>
+                <input required name="lastName" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Adresse</label>
+              <input required name="addressLine1" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+            </div>
+            <div className="space-y-2">
+              <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Complément d'adresse (optionnel)</label>
+              <input name="addressLine2" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+            </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Code postal</label>
+                <input required name="postalCode" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Ville</label>
+                <input required name="city" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="font-sans text-[0.65rem] uppercase tracking-widest text-black/50">Pays</label>
+              <input required name="country" defaultValue="France" className="w-full border-b border-black/20 bg-transparent py-2 font-sans text-sm text-black focus:border-black focus:outline-none transition-colors" />
+            </div>
+            
+            {formError && (
+              <p className="font-sans text-xs text-red-500 mt-4">{formError}</p>
+            )}
+
+            <button disabled={formLoading} type="submit" className="mt-8 border border-black px-8 py-3 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-black hover:bg-black hover:text-white transition-colors w-full disabled:opacity-50">
+              {formLoading ? "Enregistrement..." : "Enregistrer l'adresse"}
+            </button>
+          </form>
+        </div>
+      ) : (
+        <div className="mt-8 rounded-none bg-white p-10 md:p-14">
+          {loading ? (
+            <div className="flex items-center gap-3 text-black/50 font-sans text-sm">
+              <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              Chargement de vos adresses...
+            </div>
+          ) : error ? (
+            <p className="font-sans text-sm leading-relaxed text-red-500">
+              Une erreur est survenue lors du chargement de vos adresses.
+            </p>
+          ) : addresses.length === 0 ? (
+            <div>
+              <p className="font-sans text-sm leading-relaxed text-black/50">
+                Aucune adresse enregistrée.
+              </p>
+              <button onClick={() => setIsAdding(true)} className="mt-8 border border-black px-8 py-3 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-black hover:bg-black hover:text-white transition-colors">
+                Ajouter une adresse
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                {addresses.map((addr) => (
+                  <div key={addr.id} className="border border-black/10 p-6 flex flex-col justify-between">
+                    <div>
+                      <p className="font-sans text-sm font-semibold tracking-wide text-black mb-4 uppercase">{addr.firstName} {addr.lastName}</p>
+                      <p className="font-sans text-sm text-black/70 leading-relaxed">
+                        {addr.addressLine1} <br/>
+                        {addr.addressLine2 ? <>{addr.addressLine2}<br/></> : ""}
+                        {addr.postalCode} {addr.city} <br/>
+                        {addr.country}
+                      </p>
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-black/10 flex justify-end">
+                      <button onClick={() => handleDelete(addr.id)} className="font-sans text-xs tracking-widest uppercase text-red-600/70 hover:text-red-600 transition-colors">
+                        Supprimer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setIsAdding(true)} className="border border-black px-8 py-3 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-black hover:bg-black hover:text-white transition-colors">
+                Ajouter une autre adresse
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

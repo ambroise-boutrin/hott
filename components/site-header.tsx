@@ -9,6 +9,7 @@ import { useRouter, usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSession, signIn, signOut } from "next-auth/react"
 import { useCartStore } from "../lib/store/useCartStore"
+import { useAuthUIStore } from "../lib/store/useAuthUIStore"
 import { useTranslationStore, Locale } from "../lib/i18n/useTranslationStore"
 
 export function SiteHeader() {
@@ -21,13 +22,18 @@ export function SiteHeader() {
   const [isVisible, setIsVisible] = useState(true)
   const [isAtTop, setIsAtTop] = useState(true)
   const [lastScrollY, setLastScrollY] = useState(0)
-  const [isAccountOpen, setIsAccountOpen] = useState(false)
+  
+  const isAccountOpen = useAuthUIStore((state) => state.isOpen)
+  const setIsAccountOpen = useAuthUIStore((state) => state.setIsOpen)
+  
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   
   const isCartOpen = useCartStore((state) => state.isOpen)
   const setIsCartOpen = useCartStore((state) => state.setIsOpen)
   const cartItems = useCartStore((state) => state.items)
+  
+  const cartTotalItems = cartItems.reduce((total, item) => total + item.quantity, 0)
   const removeCartItem = useCartStore((state) => state.removeItem)
   const updateCartItemQuantity = useCartStore((state) => state.updateQuantity)
   const cartTotal = useCartStore((state) => state.getCartTotal())
@@ -231,10 +237,15 @@ export function SiteHeader() {
               <button
                 type="button"
                 aria-label="Panier"
-                className={iconClass}
+                className={`relative ${iconClass}`}
                 onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag size={18} strokeWidth={1} />
+                {cartTotalItems > 0 && (
+                  <span className="absolute -top-1.5 -right-2 flex h-[14px] min-w-[14px] items-center justify-center rounded-full bg-white px-[4px] text-[8px] font-bold text-black border border-black/20">
+                    {cartTotalItems}
+                  </span>
+                )}
               </button>
             </div>
           </div>
@@ -564,46 +575,46 @@ export function SiteHeader() {
 
       {/* Cart Drawer Panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-[101] flex w-full max-w-md flex-col bg-[#050505] p-8 shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] border-l border-white/10 ${isCartOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-[101] flex w-full max-w-md flex-col bg-white p-8 shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] border-l border-black/10 ${isCartOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
         <button
           onClick={() => setIsCartOpen(false)}
-          className="absolute right-8 top-8 flex items-center gap-2 text-white/60 transition-colors hover:text-white"
+          className="absolute right-8 top-8 flex items-center gap-2 text-black/60 transition-colors hover:text-black"
         >
           <span className="font-sans text-xs font-light uppercase tracking-widest">Fermer</span>
           <X size={18} strokeWidth={1} />
         </button>
 
         <div className="mt-20 flex h-full flex-col">
-          <h2 className="font-sans text-3xl font-light tracking-widest uppercase text-white">{dict.cart.title}</h2>
+          <h2 className="font-sans text-3xl font-light tracking-widest uppercase text-black">{dict.cart.title}</h2>
 
           {cartItems.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center text-center">
-              <ShoppingBag size={48} strokeWidth={1} className="mb-6 text-white/20" />
-              <p className="font-sans text-lg font-light text-white/60">{dict.cart.empty}</p>
-              <p className="mt-2 font-sans text-sm font-light text-white/40">{dict.cart.emptyDesc}</p>
+              <ShoppingBag size={48} strokeWidth={1} className="mb-6 text-black/20" />
+              <p className="font-sans text-lg font-light text-black/60">{dict.cart.empty}</p>
+              <p className="mt-2 font-sans text-sm font-light text-black/40">{dict.cart.emptyDesc}</p>
 
               <button
                 onClick={() => setIsCartOpen(false)}
-                className="mt-8 border border-white/20 px-8 py-4 font-sans text-xs font-light uppercase tracking-[0.2em] text-white transition-colors hover:bg-white hover:text-black"
+                className="mt-8 border border-black/20 px-8 py-4 font-sans text-xs font-light uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
               >
                 {dict.cart.continueShopping}
               </button>
             </div>
           ) : (
             <div className="flex flex-1 flex-col mt-8">
-              <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-white/10">
+              <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-black/10">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4 border-b border-white/10 py-6">
-                    <div className="relative h-24 w-20 overflow-hidden bg-white/5">
-                      <Image src={item.image} alt={item.name} fill className="object-cover opacity-80" />
+                  <div key={item.id} className="flex gap-4 border-b border-black/10 py-6">
+                    <div className="relative h-24 w-20 overflow-hidden bg-black/5">
+                      <Image src={item.image} alt={item.name} fill className="object-cover opacity-90" />
                     </div>
                     <div className="flex flex-1 flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start">
-                          <h3 className="font-sans text-sm uppercase tracking-wider font-light text-white">{item.name}</h3>
-                          <button onClick={() => removeCartItem(item.id)} className="text-white/40 hover:text-white transition-colors">
+                          <h3 className="font-sans text-sm uppercase tracking-wider font-light text-black">{item.name}</h3>
+                          <button onClick={() => removeCartItem(item.id)} className="text-black/40 hover:text-black transition-colors">
                             <X size={16} strokeWidth={1.5} />
                           </button>
                         </div>
@@ -611,37 +622,46 @@ export function SiteHeader() {
                         <div className="mt-4 flex items-center gap-4">
                           <button 
                             onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
-                            className="text-white/40 hover:text-white transition-colors"
+                            className="text-black/40 hover:text-black transition-colors"
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="font-sans text-xs text-white/80 w-4 text-center">{item.quantity}</span>
+                          <span className="font-sans text-xs text-black/80 w-4 text-center">{item.quantity}</span>
                           <button 
                             onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
-                            className="text-white/40 hover:text-white transition-colors"
+                            className="text-black/40 hover:text-black transition-colors"
                           >
                             <Plus size={14} />
                           </button>
                         </div>
                       </div>
-                      <p className="font-sans text-xs font-medium tracking-widest text-white/60">{item.price}€</p>
+                      <p className="font-sans text-xs font-medium tracking-widest text-black/60">{item.price}€</p>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className="border-t border-white/10 pt-6 mt-6 pb-8">
-                <div className="flex justify-between font-sans text-sm uppercase tracking-widest font-light text-white mb-6">
+              <div className="border-t border-black/10 pt-6 mt-6 pb-8">
+                <div className="flex justify-between font-sans text-sm uppercase tracking-widest font-light text-black mb-6">
                   <span>{dict.cart.total}</span>
                   <span>{cartTotal}€</span>
                 </div>
-                <TransitionLink
-                  href="/checkout"
-                  onClick={() => setIsCartOpen(false)}
-                  className="flex justify-center items-center w-full border border-white bg-white py-4 font-sans text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
-                >
-                  {dict.cart.checkout}
-                </TransitionLink>
+                <div className="flex flex-col gap-3">
+                  <TransitionLink
+                    href="/cart"
+                    onClick={() => setIsCartOpen(false)}
+                    className="flex justify-center items-center w-full border border-black bg-transparent py-4 font-sans text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
+                  >
+                    {dict.cart.viewCart || "Accéder au panier"}
+                  </TransitionLink>
+                  <TransitionLink
+                    href="/checkout"
+                    onClick={() => setIsCartOpen(false)}
+                    className="flex justify-center items-center w-full border border-black bg-black py-4 font-sans text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-transparent hover:text-black"
+                  >
+                    {dict.cart.checkout}
+                  </TransitionLink>
+                </div>
               </div>
             </div>
           )}

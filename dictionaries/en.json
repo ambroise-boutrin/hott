@@ -14,7 +14,8 @@
     "continueShopping": "Continue Shopping",
     "qty": "Qty",
     "total": "Total",
-    "checkout": "Checkout"
+    "checkout": "Checkout",
+    "viewCart": "View Cart"
   },
   "auth": {
     "login": "Login",

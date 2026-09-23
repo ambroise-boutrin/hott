@@ -14,7 +14,8 @@
     "continueShopping": "Continuer mes achats",
     "qty": "Qté",
     "total": "Total",
-    "checkout": "Commander"
+    "checkout": "Commander",
+    "viewCart": "Accéder au panier"
   },
   "auth": {
     "login": "Connexion",

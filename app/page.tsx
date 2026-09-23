@@ -1,11 +1,8 @@
 import { SiteHeader } from "@/components/site-header"
 import { SplashScreen } from "@/components/splash-screen"
 import { HeroSection } from "@/components/hero-section"
+import { SplitProductSection } from "@/components/split-product-section"
 import { FounderWordSection } from "@/components/founder-word-section"
-import { ProductGridSection } from "@/components/product-grid-section"
-import { AmbassadorSection } from "@/components/ambassador-section"
-import { MissionSection } from "@/components/mission-section"
-import { MacroDetails } from "@/components/macro-details"
 import { SiteFooter } from "@/components/site-footer"
 
 export default function Home() {
@@ -14,11 +11,8 @@ export default function Home() {
       <SplashScreen />
       <SiteHeader />
       <HeroSection />
+      <SplitProductSection />
       <FounderWordSection />
-      <ProductGridSection />
-      <AmbassadorSection />
-      <MissionSection />
-      <MacroDetails />
       <SiteFooter />
     </main>
   )

@@ -5,7 +5,6 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
   --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --color-beige: #ddc8b8;
   --color-beige-foreground: #000000;

@@ -1,36 +1,38 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, Variants } from "framer-motion"
 
 interface TextRevealProps {
   text: string
   className?: string
   delay?: number
+  stagger?: number
+  syncWithParent?: boolean
 }
 
-export function TextReveal({ text, className = "", delay = 0 }: TextRevealProps) {
+export function TextReveal({ text, className = "", delay = 0, stagger = 0.08, syncWithParent = false }: TextRevealProps) {
   // Split text into words
   const words = text.split(" ")
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 1 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.08,
+        staggerChildren: stagger,
         delayChildren: delay,
       },
     },
   }
 
-  const wordVariants = {
+  const wordVariants: Variants = {
     hidden: { y: "110%", opacity: 0 },
     visible: {
       y: "0%",
       opacity: 1,
       transition: {
-        ease: [0.76, 0, 0.24, 1],
-        duration: 0.9,
+        ease: [0.76, 0, 0.24, 1] as [number, number, number, number],
+        duration: 0.5,
       },
     },
   }
@@ -38,8 +40,8 @@ export function TextReveal({ text, className = "", delay = 0 }: TextRevealProps)
   return (
     <motion.div
       variants={containerVariants}
-      initial="hidden"
-      whileInView="visible"
+      initial={syncWithParent ? undefined : "hidden"}
+      whileInView={syncWithParent ? undefined : "visible"}
       viewport={{ once: true, margin: "-100px" }}
       className={`flex flex-wrap ${className}`}
     >

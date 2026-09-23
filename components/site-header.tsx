@@ -1,6 +1,6 @@
 "use client"
 
-import { User, ShoppingBag, Search, X, Menu } from "lucide-react"
+import { User, ShoppingBag, Search, X, Menu, Minus, Plus } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { TransitionLink } from "./transition-link"
@@ -29,6 +29,7 @@ export function SiteHeader() {
   const setIsCartOpen = useCartStore((state) => state.setIsOpen)
   const cartItems = useCartStore((state) => state.items)
   const removeCartItem = useCartStore((state) => state.removeItem)
+  const updateCartItemQuantity = useCartStore((state) => state.updateQuantity)
   const cartTotal = useCartStore((state) => state.getCartTotal())
 
   // Auth taskpane states
@@ -563,66 +564,81 @@ export function SiteHeader() {
 
       {/* Cart Drawer Panel */}
       <div
-        className={`fixed inset-y-0 right-0 z-[101] flex w-full max-w-md flex-col bg-white p-8 shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isCartOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed inset-y-0 right-0 z-[101] flex w-full max-w-md flex-col bg-[#050505] p-8 shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] border-l border-white/10 ${isCartOpen ? "translate-x-0" : "translate-x-full"
           }`}
       >
         <button
           onClick={() => setIsCartOpen(false)}
-          className="absolute right-8 top-8 flex items-center gap-2 text-black/60 transition-colors hover:text-black"
+          className="absolute right-8 top-8 flex items-center gap-2 text-white/60 transition-colors hover:text-white"
         >
-          <span className="font-sans text-xs font-semibold uppercase tracking-widest">Fermer</span>
+          <span className="font-sans text-xs font-light uppercase tracking-widest">Fermer</span>
           <X size={18} strokeWidth={1} />
         </button>
 
         <div className="mt-20 flex h-full flex-col">
-          <h2 className="font-sans text-3xl font-semibold tracking-tight text-black">{dict.cart.title}</h2>
+          <h2 className="font-sans text-3xl font-light tracking-widest uppercase text-white">{dict.cart.title}</h2>
 
           {cartItems.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center text-center">
-              <ShoppingBag size={48} strokeWidth={1} className="mb-6 text-black/20" />
-              <p className="font-sans text-lg font-medium text-black/60">{dict.cart.empty}</p>
-              <p className="mt-2 font-sans text-sm text-black/40">{dict.cart.emptyDesc}</p>
+              <ShoppingBag size={48} strokeWidth={1} className="mb-6 text-white/20" />
+              <p className="font-sans text-lg font-light text-white/60">{dict.cart.empty}</p>
+              <p className="mt-2 font-sans text-sm font-light text-white/40">{dict.cart.emptyDesc}</p>
 
               <button
                 onClick={() => setIsCartOpen(false)}
-                className="mt-8 border border-black px-8 py-4 font-sans text-xs font-semibold uppercase tracking-[0.2em] text-black transition-colors hover:bg-black hover:text-white"
+                className="mt-8 border border-white/20 px-8 py-4 font-sans text-xs font-light uppercase tracking-[0.2em] text-white transition-colors hover:bg-white hover:text-black"
               >
                 {dict.cart.continueShopping}
               </button>
             </div>
           ) : (
             <div className="flex flex-1 flex-col mt-8">
-              <div className="flex-1 overflow-y-auto pr-4">
+              <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-white/10">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4 border-b border-black/10 py-6">
-                    <div className="relative h-24 w-20 overflow-hidden bg-[#f5f3ef]">
-                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                  <div key={item.id} className="flex gap-4 border-b border-white/10 py-6">
+                    <div className="relative h-24 w-20 overflow-hidden bg-white/5">
+                      <Image src={item.image} alt={item.name} fill className="object-cover opacity-80" />
                     </div>
                     <div className="flex flex-1 flex-col justify-between">
                       <div>
-                        <div className="flex justify-between">
-                          <h3 className="font-sans text-lg font-medium text-black">{item.name}</h3>
-                          <button onClick={() => removeCartItem(item.id)} className="text-black/40 hover:text-black">
-                            <X size={16} />
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-sans text-sm uppercase tracking-wider font-light text-white">{item.name}</h3>
+                          <button onClick={() => removeCartItem(item.id)} className="text-white/40 hover:text-white transition-colors">
+                            <X size={16} strokeWidth={1.5} />
                           </button>
                         </div>
-                        <p className="font-sans text-sm text-black/50">{dict.cart.qty}: {item.quantity}</p>
+                        
+                        <div className="mt-4 flex items-center gap-4">
+                          <button 
+                            onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                            className="text-white/40 hover:text-white transition-colors"
+                          >
+                            <Minus size={14} />
+                          </button>
+                          <span className="font-sans text-xs text-white/80 w-4 text-center">{item.quantity}</span>
+                          <button 
+                            onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                            className="text-white/40 hover:text-white transition-colors"
+                          >
+                            <Plus size={14} />
+                          </button>
+                        </div>
                       </div>
-                      <p className="font-sans text-sm font-semibold tracking-widest text-[#c5a880]">{item.price}€</p>
+                      <p className="font-sans text-xs font-medium tracking-widest text-white/60">{item.price}€</p>
                     </div>
                   </div>
                 ))}
               </div>
               
-              <div className="border-t border-black/10 pt-6 mt-6 pb-8">
-                <div className="flex justify-between font-sans text-lg font-semibold text-black mb-6">
+              <div className="border-t border-white/10 pt-6 mt-6 pb-8">
+                <div className="flex justify-between font-sans text-sm uppercase tracking-widest font-light text-white mb-6">
                   <span>{dict.cart.total}</span>
                   <span>{cartTotal}€</span>
                 </div>
                 <TransitionLink
                   href="/checkout"
                   onClick={() => setIsCartOpen(false)}
-                  className="flex justify-center items-center w-full border border-black bg-black py-4 font-sans text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-white transition-colors hover:bg-transparent hover:text-black"
+                  className="flex justify-center items-center w-full border border-white bg-white py-4 font-sans text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-black transition-colors hover:bg-transparent hover:text-white"
                 >
                   {dict.cart.checkout}
                 </TransitionLink>

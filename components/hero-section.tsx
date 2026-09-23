@@ -9,10 +9,14 @@ export function HeroSection() {
     <section className="relative flex h-screen w-full flex-col items-center justify-end overflow-hidden bg-black">
       <video 
         src="/11543-231232163_medium.mp4" 
-        autoPlay 
-        loop 
-        muted 
-        playsInline
+        autoPlay={true}
+        loop={true}
+        muted={true}
+        playsInline={true}
+        onEnded={(e) => {
+          const video = e.target as HTMLVideoElement;
+          video.play();
+        }}
         className="absolute inset-0 h-full w-full object-cover"
       />
       {/* Dark gradient to fade seamlessly into the next section */}
@@ -27,10 +31,10 @@ export function HeroSection() {
         className="relative z-10 flex w-full flex-col md:flex-row md:items-end md:justify-between gap-8 px-6 md:px-12"
       >
         <div className="max-w-2xl text-left">
-          <h1 className="font-serif text-5xl font-normal tracking-[0.15em] text-white md:text-6xl lg:text-7xl uppercase">
+          <h1 className="font-sans text-5xl font-light tracking-[0.15em] text-white md:text-6xl lg:text-7xl uppercase">
             {dict.hero.title}
           </h1>
-          <p className="mt-4 max-w-xl text-pretty font-serif text-lg italic tracking-wide text-white/90 md:text-xl">
+          <p className="mt-4 max-w-xl text-pretty font-sans font-light text-lg italic tracking-wide text-white/90 md:text-xl">
             {dict.hero.subtitle}
           </p>
         </div>

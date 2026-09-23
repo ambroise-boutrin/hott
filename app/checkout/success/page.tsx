@@ -48,7 +48,7 @@ export default function SuccessPage() {
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#ddc8b8] to-transparent opacity-20"></div>
 
           {/* Textes Remerciements */}
-          <h1 className="text-3xl lg:text-4xl font-light tracking-widest uppercase mb-4 font-serif">
+          <h1 className="text-3xl lg:text-4xl font-light tracking-widest uppercase mb-4 font-sans">
             Merci pour votre commande
           </h1>
           

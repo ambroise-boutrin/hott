@@ -24,7 +24,7 @@ export default function NotFound() {
         <span className="font-sans text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-[#c5a880] mb-6">
           Erreur 404
         </span>
-        <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-black mb-6 leading-tight">
+        <h1 className="font-sans text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-black mb-6 leading-tight">
           Piste Introuvable
         </h1>
         <p className="font-sans text-xs md:text-sm text-black/60 font-medium leading-relaxed mb-12 max-w-md">

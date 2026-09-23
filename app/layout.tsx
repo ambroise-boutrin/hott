@@ -1,6 +1,6 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
-import { Cormorant_Garamond, Montserrat } from 'next/font/google'
+import { Montserrat } from 'next/font/google'
 import { CookieConsent } from '../components/cookie-consent'
 import { SmoothScroll } from '../components/smooth-scroll'
 import { PageTransition } from '../components/page-transition'
@@ -8,12 +8,7 @@ import { TranslationInit } from '../lib/i18n/TranslationInit'
 import { Providers } from './providers'
 import './globals.css'
 
-const cormorant = Cormorant_Garamond({
-  weight: ['300', '400', '500', '600', '700'],
-  subsets: ['latin'],
-  variable: '--font-serif',
-  display: 'swap',
-})
+
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -71,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${cormorant.variable} ${montserrat.variable} bg-black`}
+      className={`${montserrat.variable} bg-black`}
     >
       <body className="antialiased bg-black text-white font-sans">
         <SmoothScroll>

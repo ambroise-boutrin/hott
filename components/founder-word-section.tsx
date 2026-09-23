@@ -24,17 +24,8 @@ export function FounderWordSection() {
   const imageY = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"])
 
   return (
-    // Le fond n'est plus blanc pur, mais un beige crème très subtil et luxueux (#f9f8f6)
-    <section ref={containerRef} className="relative w-full bg-[#f9f8f6] px-8 py-28 md:px-12 lg:py-40 overflow-hidden">
+    <section ref={containerRef} className="relative w-full bg-black px-8 py-28 md:px-12 lg:py-40 overflow-hidden border-t border-white/10">
       
-      {/* Dégradé de transition ULTRA fluide : fond noir vers fond crème */}
-      <div 
-        className="absolute top-0 left-0 right-0 h-[400px] md:h-[500px] z-0 pointer-events-none" 
-        style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 15%, rgba(0,0,0,0.4) 45%, rgba(249,248,246,0) 100%)'
-        }}
-      />
-
       <div className="mx-auto max-w-6xl relative z-10 grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-16 pt-12">
         
         {/* Colonne de gauche (Image Éditoriale) */}
@@ -44,52 +35,44 @@ export function FounderWordSection() {
         >
           <TextReveal
             text={dict.founder.title}
-            className="font-sans text-[0.6rem] font-semibold uppercase tracking-[0.4em] text-[#c5a880]"
+            className="font-sans text-[0.6rem] font-semibold uppercase tracking-[0.4em] text-white/50"
           />
           
           {/* Image style magazine, adaptée pour mobile (portrait 4:5) et desktop (portrait 3:4) */}
           <div className="relative w-full aspect-[4/5] md:aspect-[3/4] overflow-hidden mt-6 md:mt-0">
-            <motion.img 
-              style={{ y: imageY, scale: 1.15 }}
+            <img 
               src="/hott-hero.png" 
               alt="HOTT Vision"
-              className="absolute inset-0 w-full h-full object-cover filter grayscale contrast-125 opacity-90"
+              className="absolute inset-0 w-full h-full object-cover filter grayscale contrast-125 opacity-70"
             />
           </div>
         </motion.div>
 
         {/* Colonne de droite (Texte) */}
-        <div className="md:col-span-6 md:col-start-7 flex flex-col gap-8 font-sans text-lg md:text-xl font-light leading-[1.7] text-black/80">
-          <motion.p {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.05 }}>
-            {dict.founder.p1}
-          </motion.p>
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="md:col-span-6 md:col-start-7 flex flex-col gap-8 font-sans text-lg md:text-xl font-light leading-[1.7] text-white/80"
+        >
+          <TextReveal syncWithParent text={dict.founder.p1} delay={0.1} stagger={0.005} />
           
-          <motion.p {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.1 }}>
-            {dict.founder.p2}
-          </motion.p>
+          <TextReveal syncWithParent text={dict.founder.p2} delay={0.15} stagger={0.005} />
           
-          <motion.p {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.15 }}>
-            {dict.founder.p3}
-          </motion.p>
+          <TextReveal syncWithParent text={dict.founder.p3} delay={0.2} stagger={0.005} />
           
-          <motion.p {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.2 }} className="text-black font-medium">
-            {dict.founder.p4}
-          </motion.p>
+          <TextReveal syncWithParent text={dict.founder.p4} delay={0.25} stagger={0.005} className="text-white font-medium" />
           
-          <motion.p {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.25 }}>
-            {dict.founder.p5}
-          </motion.p>
+          <TextReveal syncWithParent text={dict.founder.p5} delay={0.3} stagger={0.005} />
           
-          <motion.p {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.3 }}>
-            {dict.founder.p6}
-          </motion.p>
+          <TextReveal syncWithParent text={dict.founder.p6} delay={0.35} stagger={0.005} />
 
-          <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.35 }} className="mt-8 pt-8 border-t border-black/10">
-            <p className="font-sans text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-black">
+          <motion.div variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { delay: 0.7, duration: 0.6, ease: [0.22, 1, 0.36, 1] } } }} className="mt-8 pt-8 border-t border-white/10">
+            <p className="font-sans text-[0.6rem] font-semibold uppercase tracking-[0.25em] text-white">
               {dict.founder.signature}
             </p>
           </motion.div>
-        </div>
+        </motion.div>
 
       </div>
     </section>

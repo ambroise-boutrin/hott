@@ -25,17 +25,17 @@ export function SplitProductSection() {
   }
 
   return (
-    <section id="experience" className="relative w-full h-screen bg-black flex flex-col md:flex-row overflow-hidden">
+    <section id="experience" className="relative w-full h-[100vh] md:h-screen bg-black flex flex-col md:flex-row overflow-hidden">
       {/* Warmbit Side */}
       <div
-        className="relative cursor-default overflow-hidden group border-b md:border-b-0 md:border-r border-white/10"
+        className="relative cursor-default overflow-hidden group border-b md:border-b-0 md:border-r border-white/10 h-[var(--height-mobile)] md:h-auto md:flex-[var(--flex-grow)] transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
         onMouseEnter={() => handleHover("warmbit")}
         onMouseLeave={() => handleHover(null)}
         onClick={() => handleHover(hoveredProduct === "warmbit" ? null : "warmbit")}
         style={{
-          flex: hoveredProduct === "warmbit" ? 1.6 : hoveredProduct === "warmfeet" ? 0.4 : 1,
-          transition: "flex 0.9s cubic-bezier(0.22, 1, 0.36, 1)"
-        }}
+          "--flex-grow": hoveredProduct === "warmbit" ? 1.6 : hoveredProduct === "warmfeet" ? 0.4 : 1,
+          "--height-mobile": hoveredProduct === "warmbit" ? "80vh" : hoveredProduct === "warmfeet" ? "20vh" : "50vh",
+        } as React.CSSProperties}
       >
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vh]">
           <Image
@@ -72,14 +72,14 @@ export function SplitProductSection() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-8 flex flex-col items-center max-w-sm text-center"
+                className="mt-4 md:mt-8 flex flex-col items-center max-w-sm text-center"
               >
-                <p className="font-sans text-sm md:text-base text-white/90 font-light leading-relaxed mb-8">
+                <p className="font-sans text-xs md:text-base text-white/90 font-light leading-relaxed mb-6 md:mb-8 px-4">
                   La révolution thermique pour le bien-être de votre cheval. Offrez une expérience unique et un confort inégalé pour de meilleures performances.
                 </p>
                 <button
                   onClick={(e) => handleAddToCart(e, "WARMBIT", 189, "/hott-detail.png")}
-                  className="border border-white bg-transparent px-8 py-4 font-sans text-[0.65rem] font-medium uppercase tracking-[0.25em] text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-black cursor-pointer"
+                  className="border border-white bg-transparent px-6 md:px-8 py-3 md:py-4 font-sans text-[0.65rem] font-medium uppercase tracking-[0.25em] text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-black cursor-pointer"
                 >
                   Ajouter au panier (189€)
                 </button>
@@ -91,14 +91,14 @@ export function SplitProductSection() {
 
       {/* Warmfeet Side */}
       <div
-        className="relative cursor-default overflow-hidden group"
+        className="relative cursor-default overflow-hidden group h-[var(--height-mobile)] md:h-auto md:flex-[var(--flex-grow)] transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
         onMouseEnter={() => handleHover("warmfeet")}
         onMouseLeave={() => handleHover(null)}
         onClick={() => handleHover(hoveredProduct === "warmfeet" ? null : "warmfeet")}
         style={{
-          flex: hoveredProduct === "warmfeet" ? 1.6 : hoveredProduct === "warmbit" ? 0.4 : 1,
-          transition: "flex 0.9s cubic-bezier(0.22, 1, 0.36, 1)"
-        }}
+          "--flex-grow": hoveredProduct === "warmfeet" ? 1.6 : hoveredProduct === "warmbit" ? 0.4 : 1,
+          "--height-mobile": hoveredProduct === "warmfeet" ? "80vh" : hoveredProduct === "warmbit" ? "20vh" : "50vh",
+        } as React.CSSProperties}
       >
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-[100vh]">
           <Image
@@ -135,14 +135,14 @@ export function SplitProductSection() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 transition={{ duration: 0.5, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-8 flex flex-col items-center max-w-sm text-center"
+                className="mt-4 md:mt-8 flex flex-col items-center max-w-sm text-center"
               >
-                <p className="font-sans text-sm md:text-base text-white/90 font-light leading-relaxed mb-8">
+                <p className="font-sans text-xs md:text-base text-white/90 font-light leading-relaxed mb-6 md:mb-8 px-4">
                   La perfection au service du cavalier. Une chaleur enveloppante pour rester performant même dans les conditions les plus extrêmes.
                 </p>
                 <button
                   onClick={(e) => handleAddToCart(e, "WARMFEET", 129, "/placeholder.jpg")}
-                  className="border border-white bg-transparent px-8 py-4 font-sans text-[0.65rem] font-medium uppercase tracking-[0.25em] text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-black cursor-pointer"
+                  className="border border-white bg-transparent px-6 md:px-8 py-3 md:py-4 font-sans text-[0.65rem] font-medium uppercase tracking-[0.25em] text-white backdrop-blur-md transition-all duration-300 hover:bg-white hover:text-black cursor-pointer"
                 >
                   Précommander (129€)
                 </button>
@@ -154,3 +154,4 @@ export function SplitProductSection() {
     </section>
   )
 }
+

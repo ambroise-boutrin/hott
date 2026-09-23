@@ -237,7 +237,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 aria-label="Panier"
-                className={`relative ${iconClass}`}
+                className={`relative hidden md:flex ${iconClass}`}
                 onClick={() => setIsCartOpen(true)}
               >
                 <ShoppingBag size={18} strokeWidth={1} />
@@ -286,6 +286,21 @@ export function SiteHeader() {
           )}
         </AnimatePresence>
       </header>
+
+      {/* Mobile Floating Cart Button */}
+      <button
+        type="button"
+        aria-label="Panier"
+        onClick={() => setIsCartOpen(true)}
+        className="md:hidden fixed bottom-6 right-6 z-[100] flex h-14 w-14 items-center justify-center rounded-full bg-black text-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-transform active:scale-95 border border-white/20"
+      >
+        <ShoppingBag size={24} strokeWidth={1.5} />
+        {cartTotalItems > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-bold text-black border border-black/10">
+            {cartTotalItems}
+          </span>
+        )}
+      </button>
 
       <AnimatePresence>
         {isSearchOpen && (
